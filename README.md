@@ -112,14 +112,15 @@ GSCloudPlugin.GetPrinters({
 		{j_for}{autoNo()}
 		```
 
-+ 图片插入. 使用`{j_img}`标识. 比如插入一张地址为`http://oliveche.com/print/1.jpg`的图片
++ 图片插入. 使用`{j_img}`标识. 格式为`{j_img}{imgPath, width?, height?}`, 比如插入一张地址为`http://oliveche.com/print/1.jpg`的图片
 	```
-	{j_img}{'http://oliveche.com/print/1.jpg'}
+	{j_img}{'http://oliveche.com/print/1.jpg';120;120}
 	```
 	类似于`<img src=xxxx.jpg>`的用法.
 
 	+ 网络地址需要用`http/https`开头
 	+ 如果是无需处理的常量字符串, 使用单引号 `'` 引起来
+	+ 宽和高直接在模板里指定. 用分号分隔, 比如示例里的`120`
 
 + 二维码生成
 使用`qrcode(content)`函数生成二维码, 比如

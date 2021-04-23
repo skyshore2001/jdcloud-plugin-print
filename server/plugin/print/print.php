@@ -109,12 +109,26 @@ class PrintUtil {
 				}
 
 				logit("before eval: " . $expr);
+				if ($isImg) {
+					$imgArr= explode(";", $expr);
 
-				$expr = "return (" . $expr . ");";
+					foreach($imgArr as $v) {
+						$expr = "return (" . $v . ");";
 
-				logit("full expr: " . $expr);
+						logit("full expr: " . $expr);
+						if (strlen($ret) > 0) {
+							$ret .= ";";
+						}
+						$ret .= eval($expr);
+					}
+				}
+				else {
+					$expr = "return (" . $expr . ");";
+					logit("full expr: " . $expr);
 
-				$ret = eval($expr);
+					$ret = eval($expr);
+				}
+
 				if (!isset($ret)) {
 					$ret = "";
 				}
@@ -126,7 +140,18 @@ class PrintUtil {
 
 		if ($matched) {
 			if ($isImg) {
-				$this->setImg($expr, $col, $row); 
+				logit("image expr: " . $expr);
+				$exprArr = explode(';', $expr);
+				$width = @$exprArr[1];
+				$height = @$exprArr[2];
+
+				if (!isset($width)) {
+					$width = 75;
+				}
+				if (!isset($height)) {
+					$height = 75;
+				}
+				$this->setImg($exprArr[0], $col, $row, $width, $height); 
 			}
 			else {
 				$sheet->setCellValueByColumnAndRow($col, $row, $expr);
@@ -160,34 +185,53 @@ class PrintUtil {
 	}
 
 	//生成二维码并设置到对应的位置
-	protected function setImg($imgPath, $col, $row) {
-		logit("create img: " . $imgPath);
+	protected function setImg($imgPath, $col, $row, $width=75, $height=75) {
+		logit("create img: " . $imgPath . " width: " . $width . " height: " . $height);
 
 		$sheet = $this->sheet;
 		//$drawing->setName('qrCode');
 
+		//支持png和jpeg两种图片
 		if (stripos($imgPath, "http") !== false) {
+			$type = "jpg";
 			$img = @imagecreatefromjpeg($imgPath);
 			if($img == null || !$img) {
 				logit("failed.....");
-				return;
+
+				$type = "png";
+				$img = @imagecreatefrompng($imgPath);
+				if($img == null || !$img) {
+					return;
+				}
+				else {
+					$renderType = PHPExcel_Worksheet_MemoryDrawing::RENDERING_PNG;
+					$mimeType = PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_PNG;
+				}
 			}
-		
+			else {
+				$renderType = PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG;
+				$mimeType = PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG;
+			}
+			//$width = imagesx($img);
+			//$height = imagesy($img);
+
 			$drawing =new PHPExcel_Worksheet_MemoryDrawing();
 			$drawing->setImageResource($img);
-			$drawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);//渲染方法
-			$drawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_JPEG);
+			$drawing->setRenderingFunction($renderType);//渲染方法
+			$drawing->setMimeType($mimeType);
 		}
 		else {
 			$drawing = new PHPExcel_Worksheet_Drawing();
 			$drawing->setPath($imgPath);
 		}
 
+		logit("image created: " . $imgPath);
+
 		//col起始位置是A, 就是65
 		$colName = chr(65 + $col) . $row;
 
-		$drawing->setHeight(74);
-		$drawing->setWidth(74);
+		$drawing->setWidth($width);
+		$drawing->setHeight($height);
 		$drawing->setCoordinates($colName);
 		$drawing->setOffsetX(15);
 		$drawing->setOffsetY(2);
@@ -272,7 +316,6 @@ function printFile($fmt, $ret, $fname, $tpl)
 	}
 
 	$writer->save('php://output');
-
 	return true;
 }
 
@@ -311,50 +354,6 @@ function qrcode($str) {
 function autoNoPrivate() {
 	static $noPrivate = 0;
 	return ++$noPrivate;
-}
-function getField($raw, $r, $isImg=false) {
-
-	if ($isImg) {
-		$raw = str_replace("IMG::","",$raw);
-	}
-
-	logit("rawval: " . $raw . " r[rawval]: " . $r[$raw] . " isImg: " . $isImg);
-
-	$expr = preg_replace_callback('/(?<![0-9])\$?([a-z_]\w*\b)(?!\()/iU', function ($ms) use($r, $isImg) {
-		$m = $ms[0];
-		if ($isImg) {
-			$expr = "$m=" . eval("return" . '$r["' . $m . '"];');
-		}
-		else if ($ms[0] == "FMT_D") {
-			$expr = $ms[0];
-		}
-		else if ($ms[0] == "ROW_START") {
-			$expr = $ms[0];
-		}
-		else {
-			$expr = '$r["' . $m . '"]';
-		}
-
-		//logit("ms[0]: " . $m . " expr: " . $expr);
-		return $expr;
-	}, $raw);
-
-	$ret = null;
-	if (isset($expr) && strlen($expr) > 0) {
-		if ($isImg) {
-			$ret = $expr;
-		}
-		else {
-			$expr = "return (" . $expr . ");";
-			$ret = eval($expr);
-			if (!isset($ret)) {
-				$ret = "";
-			}
-		}
-		logit("after eval: " . $ret);
-	}
-
-	return $ret;
 }
 
 /*
