@@ -209,16 +209,10 @@ function printFile($fmt, $ret, $fname, $tpl)
 
 	$retArr = table2objarr($ret);
 
-	require_once 'class/vendor/autoload.php';
+	//require_once 'class/vendor/autoload.php';
 	require_once 'class/vendor/phpoffice/phpexcel/Classes/PHPExcel.php';
 	require_once 'class/vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
 	require_once 'class/phpqrcode/phpqrcode.php';
-
-	//require_once "D:/work/wms/server/php/class/vendor/autoload.php";
-	//require_once "D:/work/wms/server/php/class/vendor/phpoffice/phpexcel/Classes/PHPExcel/Autoloader.php";
-	//require_once "D:/work/wms/server/php/class/vendor/phpoffice/phpexcel/Classes/PHPExcel.php";
-	//require_once "D:/work/wms/server/php/class/vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php";
-	//require_once "D:/work/wms/server/php/class/phpqrcode/phpqrcode.php";
 
 	// 模板
 	$file = "./template/$tpl.xlsx";
