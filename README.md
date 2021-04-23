@@ -112,7 +112,7 @@ GSCloudPlugin.GetPrinters({
 		{j_for}{autoNo()}
 		```
 
-+ 图片插入. 使用`{j_img}`标识. 格式为`{j_img}{imgPath, width?, height?}`, 比如插入一张地址为`http://oliveche.com/print/1.jpg`的图片
++ 图片插入. 使用`{j_img}`标识. 格式为`{j_img}{imgPath;width?;height?}`, 比如插入一张地址为`http://oliveche.com/print/1.jpg`的图片
 	```
 	{j_img}{'http://oliveche.com/print/1.jpg';120;120}
 	```
