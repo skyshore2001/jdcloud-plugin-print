@@ -13,10 +13,17 @@
 注意：对于注册、登录、修改密码这些操作，客户端建议使用HTTPS协议与服务端通信以确保安全。
 
 ## 加载插件
-	plugin/index.php中加入该插件
+参见插件安装方式(http://oliveche.com/jdcloud-site/后端框架.html)
 
++ 用git下载插件，注意与项目目录平级
 ```
-Plugins::add("print");
+git clone server-pc:src/jdcloud-plugin-print
+cd myproject
+```
+
++ 安装
+```
+./tool/jdcloud-plugin add ../jdcloud-plugin-print
 ```
 
 ### 打印
@@ -26,15 +33,7 @@ Plugins::add("print");
 
 2. 准备打印模板文件, 放置到代码server/template目录下
 
-3. 后端需要支持打印的AC类中, 重载accessControl类里的onHandleExportFormat, 在该函数调用插件
-	return printSvc($fmt, $ret, $fname, $tpl);
-
-- fmt: 目前只支持excel, 所以fmt就是"excel" 
-- ret: 待打印的数据
-- fname: 输出文件名
-- tpl: 模板文件名称, 默认会在template目录下查找
-
-注意: 要加上这个return, 或者onHandleExportFormat需要return true;
+3. 后端需要支持打印的AC类中, 加入use exportUtil声明
 
 4. 前端调用
 
@@ -136,3 +135,9 @@ GSCloudPlugin.GetPrinters({
 	```
 	{j_img}{qrcode(concatField(itemCode,batchNo,cartonNo))}
 	```
+
++ 图片内容从一个变量获取:
+使用`getField()`函数. 比如查询返回`url`字段. 图片地址就是这个`url`字段的值,那么模板里可以如下定义:
+```
+{j_img}{getField(url)}
+```
