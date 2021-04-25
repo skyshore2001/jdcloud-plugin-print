@@ -9,6 +9,7 @@ class PrintUtil {
 	protected $startRow;
 	protected $endRow;
 	protected $tempVal;
+	public static $curVal;
 
 	public function __construct($sheet, $ret, $lastRow, $lastCol) {
         $this->ret = $ret;
@@ -51,6 +52,7 @@ class PrintUtil {
 						$isImg = true;
 						break;
 					case "FMT_D":
+					case "FMT_DT":
 						$expr1 = $ms1[0];
 						break;
 					default:
@@ -77,20 +79,22 @@ class PrintUtil {
 			if ($isTable) {
 				$expr = "";
 				$cnt = isset($subObj) ? count($this->ret[$subObj]) : count($this->ret);
-				$this->obj = isset($subObj) ? $this->ret[$subObj] : $ret;
+
+				$this->obj = isset($subObj) ? $this->ret[$subObj] : $this->ret;
 				$this->startRow = $row;	
 				$this->endRow = $row + $cnt;
 
 				logit("start add row");
+
 				//j-for这一个括号里的内容去掉
 				$tempVal = preg_replace_callback('/\{([^{}]+)\}/iU', function ($ms2) {
 					return "";
 				}, $this->cellValue, 1);
 
-				logit("temp val: " . $tempVal);
+				//logit("temp val: " . $tempVal);
 				$this->sheet->setCellValueByColumnAndRow($col, $row, $tempVal);
 				$this->addRow($cnt, $row, $col);	
-				$lastRow = $this->endRow;
+				$lastRow += $cnt-1;
 
 				logit("end add row");
 			}
@@ -102,11 +106,14 @@ class PrintUtil {
 					}
 					else {
 						$this->obj = null;
+						$r = $this->ret;
 					}
 				}
 				else {
 					$r = $this->ret;
 				}
+
+				PrintUtil::$curVal = $r;
 
 				logit("before eval: " . $expr);
 				if ($isImg) {
@@ -325,6 +332,8 @@ function autoNo() {
 }
 
 function concatField() {
+	$r = PrintUtil::$curVal;
+
 	$numargs = func_num_args();
     logit("Number of arguments: $numargs");
 
@@ -334,7 +343,12 @@ function concatField() {
 		if ($i > 0) {
 			$concatStr .= '&';
 		}
-		$concatStr .= $arg_list[$i] . '=$r[' . $arg_list[$i] . ']';
+
+		$valStr = 'return ($r["' . $arg_list[$i] . '"]);';
+		$val = eval($valStr);
+
+		//logit("valStr: " . $valStr . " val: " . $val);
+		$concatStr .= $arg_list[$i] . '=' . $val;
     }
 
 	return $concatStr;
@@ -354,6 +368,15 @@ function qrcode($str) {
 function autoNoPrivate() {
 	static $noPrivate = 0;
 	return ++$noPrivate;
+}
+
+function getField($v) {
+	$r = PrintUtil::$curVal;
+
+	$valStr = 'return ($r["' . $v . '"]);';
+	logit("getField str: " . $valStr);
+
+	return eval($valStr);
 }
 
 /*
